@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<string.h>
+#include<math.h>
 
 struct operation_table
 {
@@ -14,40 +15,73 @@ struct symbol_table
     char label_name[15];
     int opcode;
 }symtab[100];
+int search_opcode(char opcode[15])
+{
+    int i;
+    for(i=0;i<3;i++)
+    {
+        if(strcmp(opcode,optab[i].mnemonics)==0)
+        {
+            return(optab[i].opcode);
+            break;
+        }
+
+    }
+    return(0);
+}
+int search_operand(char operand[15],int symtab_size)
+{
+        int i;
+        for(i=0;i<symtab_size;i++)
+        {
+        if(strcmp(operand,symtab[i].label_name)==0)
+        {
+            return(symtab[i].opcode);
+            break;
+        }
+
+    }
+    return(0);
+}
+contohex()
+{
+    return(12);
+}
+changetohexascii()
+{
+    return(32);
+}
 unsigned long convtodecnum(char hex[])
 {
     char *hexstr;
     int length = 0;
-    const int base = 16; // Base of Hexadecimal Number
+    const int base = 16;
     unsigned long decnum = 0;
     int i;
-    // Find length of Hexadecimal Number
     for (hexstr = hex; *hexstr != '\0'; hexstr++)
     {
-	length++;
+        length++;
     }
-    // Find Hexadecimal Number
     hexstr = hex;
     for (i = 0; *hexstr != '\0' && i < length; i++, hexstr++)
     {
-	// Compare *hexstr with ASCII values
-	if (*hexstr >= 48 && *hexstr <= 57)   // is *hexstr Between 0-9
-	{
-	    decnum += (((int)(*hexstr)) - 48) * pow(base, length - i - 1);
-	}
-	else if ((*hexstr >= 65 && *hexstr <= 70))   // is *hexstr Between A-F
-	{
-	    decnum += (((int)(*hexstr)) - 55) * pow(base, length - i - 1);
-	}
-	else if (*hexstr >= 97 && *hexstr <= 102)   // is *hexstr Between a-f
-	{
-	    decnum += (((int)(*hexstr)) - 87) * pow(base, length - i - 1);
-	}
-	else
-	{
-	    printf(" Invalid Hexadecimal Number \n");
+        if (*hexstr >= 48 && *hexstr <= 57)
+        {
+            decnum += (((int)(*hexstr)) - 48) * pow(base, length - i - 1);
+        }
+        else if ((*hexstr >= 65 && *hexstr <= 70))
+        {
+            decnum += (((int)(*hexstr)) - 55) * pow(base, length - i - 1);
+        }
+        else if (*hexstr >= 97 && *hexstr <= 102)
+        {
+            decnum += (((int)(*hexstr)) - 87) * pow(base, length - i - 1);
+        }
+        else
+        {
+            printf(" Invalid Hexadecimal Number \n");
 
-	}
+        }
     }
     return decnum;
 }
@@ -125,9 +159,9 @@ chk_opcode(char opcode[15],int *locctr,char operand[15])
 }
 int main()
 {
-    FILE *input,*inter;
-    char label[15],opcode[15],operand[15];
-    int startaddr=0,locctr=0,program_length,symtab_size=0,i;
+    FILE *input,*inter,*output;
+    char label[15],opcode[15],operand[15],current_address[15],addr[15],record[100],byte_value[50];
+    int startaddr=0,locctr=0,program_length,symtab_size=0,i,j,text_length,byte_length,value;
     input=fopen("input.txt","r");
     inter=fopen("inter.txt","w");
     fscanf(input,"%s%s%s",label,opcode,operand);
@@ -157,5 +191,91 @@ int main()
     fprintf(inter,"*\t%s\t%s\t%s\n",label,opcode,operand);
     program_length=locctr-startaddr;
     printf("\nprogram length is ==%x\n",program_length);
+    fclose(input);
+    fclose(inter);
+    printf("........................pass 2.................................................\n");
+    //.........................................................pass 2...........................
+    output=fopen("output.txt","w");
+    inter=fopen("inter.txt","r");
+    fscanf(inter,"%s%s%s%s",current_address,label,opcode,operand);
+    if(strcmp(opcode,"START")==0)
+    {
+        printf("H^%s^00%s^0000%x",label,operand,program_length);
+        //fprintf(inter,"*\t%s\t%s\t%s\n",label,opcode,operand);
+        fscanf(inter,"%s%s%s%s",current_address,label,opcode,operand);
+    }
+    while(strcmp(opcode,"END")!=0)
+        {
+            strcpy(addr,current_address);
+            text_length=0;
+            record[0]=0;
+            printf("........................1.............................\n");
+            while((text_length<30))
+            {
+                printf("................................2.............................\n");
+                if(search_opcode(opcode)!=0)
+                {
+                    printf(".........................3.................................\n");
+                    text_length+=3;
+                    strcat(record,"^");
+                    strcat(record,search_opcode(opcode));
+                    if(strcmp(operand,"*")!=0)
+                    {
+                        value=search_operand(operand,symtab_size);
+                        strcat(record,value);//.............................................contohex(value)
+                    }
+                    else
+                    {
+                        strcat(record,"0000");
+                    }
+                    fscanf(inter,"%s%s%s%s",current_address,label,opcode,operand);
+                }
+                else if(strcmp(opcode,"WORD")==0)
+                {
+                    printf(".....................4...............................\n");
+                    text_length+=3;
+                    strcat(record,"^");
+                    strcat(record,"00000");
+                    strcat(record,operand);
+                    fscanf(inter,"%s%s%s%s",current_address,label,opcode,operand);
+                }
+               else if(strcmp(opcode,"BYTE")==0)
+                {
+                    printf(".........................5555555555555555555555555................\n");
+                    byte_length=strlen(operand);
+                    byte_value[0]='\0';
+                    if(operand[0]=="c")
+                    {
+                        for(i=2,j=0;i<byte_length;i++,j++)
+                        {
+                            byte_value[j]=operand[i];
+                        }
+                        text_length+=j;
+                        strcat(record,"^");
+                        strcat(record,changetohexascii(byte_value));
+                    }
+                    if(operand[0]=="x")
+                    {
+                        for(i=2,j=0;i<byte_length;i++,j++)
+                        {
+                            byte_value[j]=operand[i];
+                        }
+                        text_length+=j/2;
+                        strcat(record,"^");
+                        strcat(record,byte_value);
+                    }
+                    fscanf(inter,"%s%s%s%s",current_address,label,opcode,operand);
+                }
+               else if(strcmp(opcode,"RESW")==0||strcmp(opcode,"RESB")==0)
+                {
+                    printf("......................6.....................\n");
+                    break;
+                }
+                printf(".......................7777777777.........................\n");
+            }
+            printf("T^00%s^%x%s\n",addr,text_length,record);
+        }
+        fclose(inter);
+        fclose(output);
     return(0);
 }
