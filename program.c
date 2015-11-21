@@ -1,14 +1,17 @@
 #include<stdio.h>
 #include<string.h>
 #include<math.h>
+#include"headerfiles.h"
 
-struct operation_table
+/*struct operation_table
 {
     char mnemonics[15];
     int opcode;
-}optab[3]={   {"LDA","00"},
-                {"JMP","01"},
-                {"STA","02"}
+}optab[5]={   {"LDA",50},
+                {"JMP",10},
+                {"STA",20},
+                {"LDCH",30},
+                {"STCH",40},
             };
 struct symbol_table
 {
@@ -18,15 +21,18 @@ struct symbol_table
 int search_opcode(char opcode[15])
 {
     int i;
-    for(i=0;i<3;i++)
+    for(i=0;i<5;i++)
     {
         if(strcmp(opcode,optab[i].mnemonics)==0)
         {
+            //printf(".........................555555.1.................................\n");
+            //printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@%x",optab[i].opcode);
             return(optab[i].opcode);
             break;
         }
 
     }
+   // printf(".........................55555.2.................................\n");
     return(0);
 }
 int search_operand(char operand[15],int symtab_size)
@@ -47,9 +53,12 @@ contohex()
 {
     return(12);
 }
-changetohexascii()
+changetohexascii(char record[50],char ch)
 {
-    return(32);
+    char text[5];
+    int char_as_int=(int)ch;
+    itoa(char_as_int,text,16);
+    strcat(record,text);
 }
 unsigned long convtodecnum(char hex[])
 {
@@ -123,7 +132,7 @@ chk_label(char label[15],int *p,int locctr)
 chk_opcode(char opcode[15],int *locctr,char operand[15])
 {
     int i,operand_value,flag;
-    for(i=0;i<3;i++)
+    for(i=0;i<5;i++)
     {
         if(strcmp(opcode,optab[i].mnemonics)==0)
             flag=1;
@@ -156,11 +165,11 @@ chk_opcode(char opcode[15],int *locctr,char operand[15])
     {
         (*locctr)=(*locctr)+3;
     }
-}
+}*/
 int main()
 {
     FILE *input,*inter,*output;
-    char label[15],opcode[15],operand[15],current_address[15],addr[15],record[100],byte_value[50];
+    char label[15],opcode[15],operand[15],current_address[15],addr[15],record[100],byte_hex_value[50],text_value[50],opcode_value[50],byte_char_value[50];
     int startaddr=0,locctr=0,program_length,symtab_size=0,i,j,text_length,byte_length,value;
     input=fopen("input.txt","r");
     inter=fopen("inter.txt","w");
@@ -200,8 +209,8 @@ int main()
     fscanf(inter,"%s%s%s%s",current_address,label,opcode,operand);
     if(strcmp(opcode,"START")==0)
     {
-        printf("H^%s^00%s^0000%x",label,operand,program_length);
-        //fprintf(inter,"*\t%s\t%s\t%s\n",label,opcode,operand);
+        printf("H^% 6s^%06s^%06x\n",label,operand,program_length);
+        fprintf(output,"H^% 6s^%06s^%06x\n",label,operand,program_length);
         fscanf(inter,"%s%s%s%s",current_address,label,opcode,operand);
     }
     while(strcmp(opcode,"END")!=0)
@@ -209,72 +218,116 @@ int main()
             strcpy(addr,current_address);
             text_length=0;
             record[0]=0;
-            printf("........................1.............................\n");
-            while((text_length<30))
+           // printf("........................1.............................\n");
+            while((text_length<30)&&(strcmp(opcode,"END")!=0))
             {
-                printf("................................2.............................\n");
+                //printf("................................2.............................\n");
                 if(search_opcode(opcode)!=0)
                 {
-                    printf(".........................3.................................\n");
+                    //printf(".........................3.................................\n");
                     text_length+=3;
+                    //printf(".........................3.1.................................\n");
                     strcat(record,"^");
-                    strcat(record,search_opcode(opcode));
+                    //printf(".........................3.2.................................\n");
+                   // printf("######################################%d",search_opcode(opcode));
+                   itoa(search_opcode(opcode),opcode_value,10);
+                    strcat(record,opcode_value);
+                    //printf(".........................3.3................................\n");
                     if(strcmp(operand,"*")!=0)
                     {
+                        //printf(".........................3.4................................\n");
                         value=search_operand(operand,symtab_size);
-                        strcat(record,value);//.............................................contohex(value)
+                        itoa(value,text_value,16);
+                        //printf(".........................3.5................................\n");
+                        strcat(record,text_value);//.............................................contohex(value)
+                        //printf(".........................3.6................................\n");
                     }
                     else
                     {
+                        //printf(".........................3.7................................\n");
                         strcat(record,"0000");
+                        //printf(".........................3.8................................\n");
                     }
+                    //printf(".........................3.9................................\n");
                     fscanf(inter,"%s%s%s%s",current_address,label,opcode,operand);
+                    //printf(".........................3.10................................\n");
                 }
-                else if(strcmp(opcode,"WORD")==0)
+                //printf("...........................aaaaaaaaaaa...............\n");
+                /*else*/ if(strcmp(opcode,"WORD")==0)
                 {
-                    printf(".....................4...............................\n");
+                   // printf(".....................4...............................\n");
                     text_length+=3;
                     strcat(record,"^");
                     strcat(record,"00000");
                     strcat(record,operand);
                     fscanf(inter,"%s%s%s%s",current_address,label,opcode,operand);
                 }
-               else if(strcmp(opcode,"BYTE")==0)
+                //printf("...........................bbbbbbbbbb...............\n");
+               /*else*/ if(strcmp(opcode,"BYTE")==0)
                 {
-                    printf(".........................5555555555555555555555555................\n");
+                    //printf(".........................5................\n");
                     byte_length=strlen(operand);
-                    byte_value[0]='\0';
-                    if(operand[0]=="c")
+                    //printf(".........................5.1...............\n");
+                    byte_hex_value[0]=0;
+                    byte_char_value[0]=0;
+                    //printf(".........................5.2...............\n");
+                    if(operand[0]=='c')
                     {
-                        for(i=2,j=0;i<byte_length;i++,j++)
+                        //printf(".........................5.3...............\n");
+                        for(i=2,j=0;i<byte_length-1;i++,j++)
                         {
-                            byte_value[j]=operand[i];
+                           //printf(".........................5.4...............\n");
+                            byte_char_value[j]=operand[i];
+                            //printf(".........................5.5...............\n");
                         }
-                        text_length+=j;
+                        //printf(".........................5.6...............\n");
+                        text_length+=(j);
+                        //printf(".........................5.7...............\n");
                         strcat(record,"^");
-                        strcat(record,changetohexascii(byte_value));
+                        for(i=0;i<j;i++)
+                        {
+                            changetohexascii(record,byte_char_value[i]);
+                        }
+                        //printf(".........................5.8...............\n");
+                       // strcat(record,byte_char_value);
+                        //printf(".........................5.9...............\n");
                     }
-                    if(operand[0]=="x")
+                    //printf(".........................5.10...............\n");
+                    if(operand[0]=='x')
                     {
-                        for(i=2,j=0;i<byte_length;i++,j++)
+                        //printf(".........................5.11...............\n");
+                        for(i=2,j=0;i<byte_length-1;i++,j++)
                         {
-                            byte_value[j]=operand[i];
+                            //printf(".........................5.12...............\n");
+                            byte_hex_value[j]=operand[i];
+                            //printf(".........................5.13...............\n");
                         }
-                        text_length+=j/2;
+                        //printf(".........................5.14...............\n");
+                        text_length+=(j/2);
+                        //printf(".........................5.15...............\n");
                         strcat(record,"^");
-                        strcat(record,byte_value);
+                        //printf(".........................5.16...............\n");
+                        strcat(record,byte_hex_value);
+                        //printf(".........................5.17...............\n");
                     }
+                    //printf(".........................5.18...............\n");
                     fscanf(inter,"%s%s%s%s",current_address,label,opcode,operand);
+                    //printf(".........................5.19...............\n");
                 }
-               else if(strcmp(opcode,"RESW")==0||strcmp(opcode,"RESB")==0)
+                //printf("...........................cccccccccccc...............\n");
+               /*else*/ if(strcmp(opcode,"RESW")==0||strcmp(opcode,"RESB")==0)
                 {
-                    printf("......................6.....................\n");
+                    //printf("......................6.....................\n");
+                    fscanf(inter,"%s%s%s%s",current_address,label,opcode,operand);
                     break;
                 }
-                printf(".......................7777777777.........................\n");
+                //printf(".......................7777777777.........................\n");
             }
-            printf("T^00%s^%x%s\n",addr,text_length,record);
+            printf("T^%06s^%02x%s\n",addr,text_length,record);
+            fprintf(output,"T^%06s^%02x%s\n",addr,text_length,record);
         }
+        printf("E^%06x\n",startaddr);
+        fprintf(output,"E^%06x\n",startaddr);
         fclose(inter);
         fclose(output);
     return(0);
